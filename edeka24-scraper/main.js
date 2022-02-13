@@ -1,31 +1,46 @@
 const Apify = require('apify');
-const {
-    utils: { enqueueLinks },
-} = Apify;
 
 Apify.main(async () => {
-    const requestQueue = await Apify.openRequestQueue();
-    await requestQueue.addRequest({ url: 'https://www.edeka24.de' });
+    const sources = [
+        'https://www.edeka24.de/Lebensmittel/Kaffee-und-Tee/',
+        'https://www.edeka24.de/Lebensmittel/Getraenke/',
+        'https://www.edeka24.de/Lebensmittel/Backzutaten/'
+    ];
 
-    const handlePageFunction = async ({ request, $ }) => {
-        const title = $('title').text();
-        console.log(`The title of "${request.url}" is: ${title}.`);
-
-        // Enqueue links
-        const enqueued = await enqueueLinks({
-            $,
-            requestQueue,
-            pseudoUrls: ['http[s?]://www.edeka24.de[.*]'],
-            baseUrl: request.loadedUrl,
-        });
-        console.log(`Enqueued ${enqueued.length} URLs.`);
-    };
+    const requestList = await Apify.openRequestList('categories', sources);
+    const requestQueue = await Apify.openRequestQueue(); // <----------------
 
     const crawler = new Apify.CheerioCrawler({
-        maxRequestsPerCrawl: 20,
-        requestQueue,
-        handlePageFunction,
+        maxRequestsPerCrawl: 50, // <----------------------------------------
+        requestList,
+        requestQueue, // <---------------------------------------------------
+        handlePageFunction: async ({ $, request }) => {
+            console.log(`Processing ${request.url}`);
+            var milliseconds = (new Date().getTime()).toString();
+            // This is our new scraping logic.
+            if (request.userData.detailPage) {
+                const results = {
+                    url: request.url,
+                    title: ($('h1').text()).trim(),
+                    price: ($('div.price').text()).trim()
+                };
+                const store = await Apify.openKeyValueStore('product-pages');
+                await store.setValue(milliseconds, results);
+            }
+            // Only enqueue new links from the category pages.
+            if (!request.userData.detailPage) {
+                await Apify.utils.enqueueLinks({
+                    $,
+                    requestQueue,
+                    selector: 'div.product-details > a',
+                    baseUrl: request.loadedUrl,
+                    transformRequestFunction: req => {
+                        req.userData.detailPage = true;
+                        return req;
+                    }
+                });
+            }
+        },
     });
-
     await crawler.run();
 });
