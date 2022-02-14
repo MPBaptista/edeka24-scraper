@@ -17,7 +17,7 @@ Apify.main(async () => {
 
     log.info('Setting up crawler.');
     const crawler = new Apify.CheerioCrawler({
-        useSessionPool: true,
+        useSessionPool: true, // shared IP Address emulation
         persistCookiesPerSession: true,
         requestList,
         requestQueue,
