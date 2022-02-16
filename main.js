@@ -28,13 +28,12 @@ Apify.main(async () => {
             if (request.userData.detailPage) {
                 $('.product-item').each(async function(){
                     const results = {
-                        url: request.url,
                         category : (request.url.split("/").splice(3, 3)).toString(),
                         title: ($(this).find('h2').text()).trim(),
                         price: ($(this).find('.price').text()).trim(),
                         price_note: ($(this).find('.price-note').text()).trim()
                     };
-                    var milliseconds = (new Date().getTime()).toString();
+                    var milliseconds = (new Date().getTime() + Math.random()).toString(); // use time as unique id
                     const store = await Apify.openKeyValueStore('product-pages');
                     await store.setValue(milliseconds, results);
                 });
