@@ -3,6 +3,10 @@ const {
     utils: { log },
 } = Apify;
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+};
+
 Apify.main(async () => {
     const sources = [
         'https://www.edeka24.de/'
@@ -48,6 +52,7 @@ Apify.main(async () => {
                     },
                 });
             }
+            await new Promise(r => setTimeout(r, 500)); // respect robots.txt Crawl-delay
         },
     });
     
