@@ -17,7 +17,7 @@ Apify.main(async () => {
 
     log.info('Setting up crawler.');
     const crawler = new Apify.CheerioCrawler({
-        maxRequestsPerCrawl: 20, // <------ REMOVE
+        maxConcurrency: 5, // only allow max of 5 concurrent requests
         useSessionPool: true, // shared IP Address emulation
         persistCookiesPerSession: true,
         requestList,
