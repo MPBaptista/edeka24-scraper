@@ -27,10 +27,17 @@ Apify.main(async () => {
 
             if (request.userData.detailPage) {
                 $('.product-item').each(async function(){
+                    var price = ($(this).find('.price').text()).trim()
+                    if (price.includes('\n')) {
+                        var parsed_price = price.split(/\r?\n/)[0]
+                    } else {
+                        var parsed_price = price
+                    };
                     const results = {
-                        category : (request.url.split("/").splice(3, 3)).toString(),
+                        url: ($(this).find('.product-details > a').attr('href')),
+                        category: (request.url.split("/").splice(3, 3)).toString(),
                         title: ($(this).find('h2').text()).trim(),
-                        price: ($(this).find('.price').text()).trim(),
+                        price: parsed_price,
                         price_note: ($(this).find('.price-note').text()).trim()
                     };
                     var milliseconds = (new Date().getTime() + Math.random()).toString(); // use time as unique id
