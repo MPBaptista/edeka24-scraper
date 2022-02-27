@@ -1,7 +1,9 @@
 const Apify = require('apify');
-const {
-    utils: { log },
+const { v4: uuidv4 } = require('uuid');
+const { utils: 
+    {log},
 } = Apify;
+
 
 Apify.main(async () => {
     const sources = [
@@ -15,7 +17,7 @@ Apify.main(async () => {
     const crawler = new Apify.CheerioCrawler({
         maxConcurrency: 5, // only allow max of 5 concurrent requests
         useSessionPool: true, // shared IP Address emulation
-        persistCookiesPerSession: true,
+        persistCookiesPerSession: false,
         requestList,
         requestQueue,
         handlePageFunction: async ({ $, request }) => {
@@ -23,7 +25,7 @@ Apify.main(async () => {
 
             if (request.userData.detailPage) {
                 $('.product-item').each(async function(){
-                    var price = ($(this).find('.price').text()).trim()
+                    const price = ($(this).find('.price').text()).trim()
                     if (price.includes('\n')) {
                         var parsed_price = price.split(/\r?\n/)[0]
                     } else {
@@ -36,9 +38,9 @@ Apify.main(async () => {
                         price: parsed_price,
                         price_note: ($(this).find('.price-note').text()).trim()
                     };
-                    var milliseconds = (new Date().getTime() + Math.random()).toString(); // use time as unique id
+                    const file_name = uuidv4();
                     const store = await Apify.openKeyValueStore('product-pages');
-                    await store.setValue(milliseconds, results);
+                    await store.setValue(file_name, results);
                 });
             };
             
@@ -54,7 +56,6 @@ Apify.main(async () => {
                     },
                 });
             }
-            await new Promise(r => setTimeout(r, 500)); // respect robots.txt Crawl-delay
         },
     });
     
@@ -62,3 +63,5 @@ Apify.main(async () => {
     await crawler.run();
     log.info('Actor finished.');
 });
+
+// cand actually do xhr requests with cheerio

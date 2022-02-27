@@ -6,6 +6,7 @@ Edeka24-scraper is a scraper for the German supermarket chain Edeka-24, develope
 
 - Have Node.js version 10.17 or higher installed.
 - Have NPM installed.
+- Have uuid package installed.
 
 ## Usage
 To run the scraper simply cd into the edeka24-scraper directory and run:
